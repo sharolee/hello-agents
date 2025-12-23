@@ -12,7 +12,8 @@ from huggingface_hub import snapshot_download, try_to_load_from_cache
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 # 设置镜像站点
-os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
+hf_url = 'https://hf-mirror.com'
+os.environ['HF_ENDPOINT'] = hf_url
 
 # 指定模型ID
 model_id = "Qwen/Qwen1.5-0.5B-Chat"
@@ -58,14 +59,12 @@ if model_exists:
     print("模型已存在于本地缓存，直接加载...")
     try:
         # 直接从快照路径加载模型
-        print("正在加载分词器...")
         tokenizer = AutoTokenizer.from_pretrained(
             snapshot_path, 
             trust_remote_code=True,
             local_files_only=True
         )
         
-        print("正在加载模型...")
         model = AutoModelForCausalLM.from_pretrained(
             snapshot_path, 
             trust_remote_code=True,
@@ -87,18 +86,15 @@ if not model_exists:
         # 下载模型到本地缓存
         local_model_path = snapshot_download(
             repo_id=model_id,
-            endpoint="https://hf-mirror.com",
+            endpoint=hf_url,
             cache_dir=cache_dir,
             resume_download=True,
             force_download=force_download
         )
         print(f"模型已下载到: {local_model_path}")
         
-        # 从下载的路径加载模型和分词器
-        print("正在加载分词器...")
         tokenizer = AutoTokenizer.from_pretrained(local_model_path, trust_remote_code=True)
         
-        print("正在加载模型...")
         model = AutoModelForCausalLM.from_pretrained(local_model_path, trust_remote_code=True).to(device)
         
         print("模型和分词器加载完成！")
@@ -109,7 +105,7 @@ if not model_exists:
 # 准备对话输入
 messages = [
     {"role": "system", "content": "You are a helpful assistant."},
-    {"role": "user", "content": "你好，请介绍你自己。"}
+    {"role": "user", "content": "你好，请介绍你自己，说明你的特点和能力。"}
 ]
 
 # 使用分词器的模板格式化输入
