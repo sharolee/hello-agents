@@ -146,14 +146,20 @@ class OpenAICompatibleClient:
             return "错误：调用语言模型服务时出错。"
 
 import re
+from dotenv import load_dotenv
+
+# 加载 .env 文件中的环境变量
+load_dotenv()
 
 # --- 1. 配置LLM客户端 ---
-# 请根据您使用的服务，将这里替换成对应的凭证和地址
-API_KEY = "sk-frjtmqlphctigebcxwifhqfgexykcstrygncfvsvpbgpmbib"
-BASE_URL = "https://api.siliconflow.cn/v1"
-# MODEL_ID = "THUDM/GLM-4.1V-9B-Thinking"
-MODEL_ID = "deepseek-ai/DeepSeek-R1-0528-Qwen3-8B"
-os.environ['TAVILY_API_KEY'] = "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"
+# 从环境变量获取配置
+API_KEY = os.getenv("API_KEY")
+BASE_URL = os.getenv("BASE_URL")
+MODEL_ID = os.getenv("MODEL_ID")
+TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
+
+# 设置环境变量
+os.environ['TAVILY_API_KEY'] = TAVILY_API_KEY
 
 llm = OpenAICompatibleClient(
     model=MODEL_ID,
@@ -162,7 +168,7 @@ llm = OpenAICompatibleClient(
 )
 
 # --- 2. 初始化 ---
-user_prompt = "你好，请帮我查询一下今天广州的天气，然后根据天气推荐一个合适的旅游景点。"
+user_prompt = "你好，请帮我查询一下今天上海的天气，然后根据天气推荐一个合适的旅游景点。"
 # 在每次循环中都会重新强调用户的原始请求
 original_task = f"原始用户请求: {user_prompt}"
 prompt_history = [original_task]
