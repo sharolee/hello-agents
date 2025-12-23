@@ -1,6 +1,12 @@
 AGENT_SYSTEM_PROMPT = """
 你是一个智能旅行助手。你的任务是分析用户的请求，并使用可用工具一步步地解决问题。
 
+# 重要提醒：
+- 用户可能提出多步骤任务，你必须完成所有步骤才能调用finish
+- 每次只能执行一个Action，然后等待Observation结果
+- 获取到工具结果后，继续思考下一步行动，直到完全满足用户需求
+- 不要重复执行相同的Action，除非之前的Action失败了
+
 # 可用工具:
 - `get_weather(city: str)`: 查询指定城市的实时天气。
 - `get_attraction(city: str, weather: str)`: 根据城市和天气搜索推荐的旅游景点。
@@ -11,7 +17,14 @@ Thought: [这里是你的思考过程和下一步计划]
 Action: [这里是你要调用的工具，格式为 function_name(arg_name="arg_value")]
 
 # 任务完成:
-当你收集到足够的信息，能够回答用户的最终问题时，你必须在`Action:`字段后使用 `finish(answer="...")` 来输出最终答案。
+当你收集到足够的信息，能够回答用户的最终问题时，你必须在`Action:`字段后使用 `finish(answer="...")` 来输出最终答案。例如：
+Action: finish(answer="北京今天天气晴朗，推荐去故宫游玩。")
+
+# 示例流程：
+用户：查询北京天气并推荐景点
+1. Thought: 需要先获取北京天气 -> Action: get_weather(city="北京")
+2. (获取天气结果后) Thought: 已获取天气，现在推荐景点 -> Action: get_attraction(city="北京", weather="晴天")
+3. (获取景点结果后) Thought: 已完成所有步骤 -> Action: finish(answer="...")
 
 请开始吧！
 """
@@ -114,7 +127,7 @@ class OpenAICompatibleClient:
 
     def generate(self, prompt: str, system_prompt: str) -> str:
         """调用LLM API来生成回应。"""
-        print("正在调用大语言模型...")
+        print(f"正在调用大语言模型{self.model}...")
         try:
             messages = [
                 {'role': 'system', 'content': system_prompt},
@@ -136,10 +149,11 @@ import re
 
 # --- 1. 配置LLM客户端 ---
 # 请根据您使用的服务，将这里替换成对应的凭证和地址
-API_KEY = "YOUR_API_KEY"
-BASE_URL = "YOUR_BASE_URL"
-MODEL_ID = "YOUR_MODEL_ID"
-os.environ['TAVILY_API_KEY'] = "YOUR_TAVILY_API_KEY"
+API_KEY = "sk-frjtmqlphctigebcxwifhqfgexykcstrygncfvsvpbgpmbib"
+BASE_URL = "https://api.siliconflow.cn/v1"
+# MODEL_ID = "THUDM/GLM-4.1V-9B-Thinking"
+MODEL_ID = "deepseek-ai/DeepSeek-R1-0528-Qwen3-8B"
+os.environ['TAVILY_API_KEY'] = "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"
 
 llm = OpenAICompatibleClient(
     model=MODEL_ID,
@@ -148,8 +162,10 @@ llm = OpenAICompatibleClient(
 )
 
 # --- 2. 初始化 ---
-user_prompt = "你好，请帮我查询一下今天北京的天气，然后根据天气推荐一个合适的旅游景点。"
-prompt_history = [f"用户请求: {user_prompt}"]
+user_prompt = "你好，请帮我查询一下今天广州的天气，然后根据天气推荐一个合适的旅游景点。"
+# 在每次循环中都会重新强调用户的原始请求
+original_task = f"原始用户请求: {user_prompt}"
+prompt_history = [original_task]
 
 print(f"用户输入: {user_prompt}\n" + "="*40)
 
@@ -157,25 +173,28 @@ print(f"用户输入: {user_prompt}\n" + "="*40)
 for i in range(5): # 设置最大循环次数
     print(f"--- 循环 {i+1} ---\n")
     
-    # 3.1. 构建Prompt
-    full_prompt = "\n".join(prompt_history)
+    # 3.1. 构建Prompt，确保始终包含原始任务
+    # 在每次循环开始时重新强调原始任务，防止模型遗忘
+    current_prompt = [original_task] + prompt_history[1:]  # 保留原始任务，但去除重复的历史记录
+    full_prompt = "\n".join(current_prompt)
+    
+    # 添加进度提示，帮助模型理解当前状态
+    if i > 0:
+        full_prompt += f"\n\n当前是第{i+1}轮循环，请继续完成用户的原始请求。"
     
     # 3.2. 调用LLM进行思考
     llm_output = llm.generate(full_prompt, system_prompt=AGENT_SYSTEM_PROMPT)
-    # 模型可能会输出多余的Thought-Action，需要截断
-    match = re.search(r'(Thought:.*?Action:.*?)(?=\n\s*(?:Thought:|Action:|Observation:)|\Z)', llm_output, re.DOTALL)
-    if match:
-        truncated = match.group(1).strip()
-        if truncated != llm_output.strip():
-            llm_output = truncated
-            print("已截断多余的 Thought-Action 对")
+    # 不再截断模型输出，让模型完整表达其思考过程
     print(f"模型输出:\n{llm_output}\n")
     prompt_history.append(llm_output)
     
     # 3.3. 解析并执行行动
-    action_match = re.search(r"Action: (.*)", llm_output, re.DOTALL)
+    # 使用更精确的正则表达式来提取Action
+    action_match = re.search(r"Action[\uff1a:]\s*(.+?)(?=\n\s*(?:Thought:|Action:|Observation:)|\Z)", llm_output, re.DOTALL)
     if not action_match:
         print("解析错误：模型输出中未找到 Action。")
+        print("完整模型输出：")
+        print(llm_output)
         break
     action_str = action_match.group(1).strip()
 
