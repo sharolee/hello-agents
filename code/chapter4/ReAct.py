@@ -15,12 +15,14 @@ Thought: 你的思考过程，用于分析问题、拆解任务和规划下一�
 Action: 你决定采取的行动，必须是以下格式之一：
 - `{{tool_name}}[{{tool_input}}]`：调用一个可用工具。
 - `Finish[最终答案]`：当你认为已经获得最终答案时。
-- 当你收集到足够的信息，能够回答用户的最终问题时，你必须在`Action:`字段后使用 `finish(answer="...")` 来输出最终答案。
+- 当你收集到足够的信息，能够回答用户的最终问题时，你必须在`Action:`字段后使用 `finish(answer="...")` 来输出最终答案。例如：Action: finish(answer="北京今天天气晴朗。")
 
 
 现在，请开始解决以下问题：
 Question: {question}
-History: {history}
+
+历史记录如下（按步骤顺序排列）：
+{history}
 """
 
 class ReActAgent:
@@ -51,7 +53,11 @@ class ReActAgent:
             if thought: print(f"🤔 思考: {thought}")
             if not action: print("警告：未能解析出有效的Action，流程终止。"); break
             
-            if action.startswith("Finish"):
+            # 将思考过程添加到历史记录
+            if thought:
+                self.history.append(f"Thought: {thought}")
+            
+            if action.strip().lower().startswith("finish"):
                 final_answer = self._parse_action_input(action)
                 print(f"🎉 最终答案: {final_answer}")
                 return final_answer
@@ -67,6 +73,8 @@ class ReActAgent:
             print(f"👀 观察: {observation}")
             self.history.append(f"Action: {action}")
             self.history.append(f"Observation: {observation}")
+            # 添加步骤分隔符，使历史记录更加清晰
+            self.history.append("---")
 
         print("已达到最大步数，流程终止。")
         return None
@@ -83,7 +91,7 @@ class ReActAgent:
         return (match.group(1), match.group(2)) if match else (None, None)
 
     def _parse_action_input(self, action_text: str):
-        match = re.match(r"\w+\[(.*)\]", action_text)
+        match = re.match(r"\w+\((.*?)\)", action_text, re.DOTALL)  # re.DOTALL让.匹配换行符
         return match.group(1) if match else ""
 
 if __name__ == '__main__':
