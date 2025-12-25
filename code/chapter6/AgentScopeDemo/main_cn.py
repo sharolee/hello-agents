@@ -7,11 +7,15 @@ import asyncio
 import os
 import random
 from typing import List, Dict, Optional
+from dotenv import load_dotenv
+
+# 加载环境变量
+load_dotenv()
 
 from agentscope.agent import ReActAgent
-from agentscope.model import DashScopeChatModel
+from agentscope.model import OpenAIChatModel
 from agentscope.pipeline import MsgHub, sequential_pipeline, fanout_pipeline
-from agentscope.formatter import DashScopeMultiAgentFormatter
+from agentscope.formatter import OpenAIChatFormatter
 
 from prompt_cn import ChinesePrompts
 from game_roles import GameRoles
@@ -31,6 +35,7 @@ from utils_cn import (
     GameModerator,
     MAX_GAME_ROUND,
     MAX_DISCUSSION_ROUND,
+    CHINESE_NAMES
 )
 
 
@@ -60,12 +65,26 @@ class ThreeKingdomsWerewolfGame:
         agent = ReActAgent(
             name=name,
             sys_prompt=ChinesePrompts.get_role_prompt(role, character),
-            model=DashScopeChatModel(
-                model_name="qwen-max",
-                api_key=os.environ["DASHSCOPE_API_KEY"],
-                enable_thinking=True,
+            # model=OpenAIChatModel(
+            #     model_name=os.environ["LLM_MODEL_ID"],
+            #     api_key=os.environ["LLM_API_KEY"],
+            #     base_url=os.environ["LLM_BASE_URL"],
+            #     timeout=int(os.environ.get("LLM_TIMEOUT", 60)),
+            # ),
+            model = OpenAIChatModel(
+                model_name=os.getenv("LLM_MODEL_ID"),
+                api_key=os.getenv("LLM_API_KEY"),
+                # organization=organization,
+                stream=False,  # 使用流式输出
+                client_args={
+                    "base_url": os.getenv("LLM_BASE_URL")  # 从环境变量获取base_url
+                },
+                # generate_kwargs={
+                #     "temperature": 0.7,
+                #     "max_tokens": 1024
+                # }
             ),
-            formatter=DashScopeMultiAgentFormatter(),
+            formatter=OpenAIChatFormatter(),
         )
         
         # 角色身份确认
@@ -73,6 +92,7 @@ class ThreeKingdomsWerewolfGame:
             await self.moderator.announce(
                 f"【{name}】你在这场三国狼人杀中扮演{GameRoles.get_role_desc(role)}，"
                 f"你的角色是{character}。{GameRoles.get_role_ability(role)}"
+                # f"你的Prompt是：{agent.sys_prompt}"
             )
         )
         
@@ -82,13 +102,11 @@ class ThreeKingdomsWerewolfGame:
     async def setup_game(self, player_count: int = 6):
         """设置游戏"""
         print("🎮 开始设置三国狼人杀游戏...")
+        player_count = random.randint(6, 10)
         
         # 获取角色配置
         roles = GameRoles.get_standard_setup(player_count)
-        characters = random.sample([
-            "刘备", "关羽", "张飞", "诸葛亮", "赵云",
-            "曹操", "司马懿", "周瑜", "孙权"
-        ], player_count)
+        characters = random.sample(CHINESE_NAMES, player_count)
         
         # 创建玩家
         for i, (role, character) in enumerate(zip(roles, characters)):
@@ -368,8 +386,8 @@ class ThreeKingdomsWerewolfGame:
 async def main():
     """主函数"""
     # 检查环境变量
-    if "DASHSCOPE_API_KEY" not in os.environ:
-        print("❌ 请设置环境变量 DASHSCOPE_API_KEY")
+    if "LLM_API_KEY" not in os.environ:
+        print("❌ 请设置环境变量 LLM_API_KEY")
         return
     
     print("🎮 欢迎来到三国狼人杀！")
