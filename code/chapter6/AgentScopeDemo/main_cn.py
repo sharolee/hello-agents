@@ -13,9 +13,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from agentscope.agent import ReActAgent
-from agentscope.model import OpenAIChatModel
+from agentscope.model import DashScopeChatModel
 from agentscope.pipeline import MsgHub, sequential_pipeline, fanout_pipeline
-from agentscope.formatter import OpenAIChatFormatter
+from agentscope.formatter import DashScopeMultiAgentFormatter
 
 from prompt_cn import ChinesePrompts
 from game_roles import GameRoles
@@ -65,26 +65,21 @@ class ThreeKingdomsWerewolfGame:
         agent = ReActAgent(
             name=name,
             sys_prompt=ChinesePrompts.get_role_prompt(role, character),
-            # model=OpenAIChatModel(
-            #     model_name=os.environ["LLM_MODEL_ID"],
-            #     api_key=os.environ["LLM_API_KEY"],
-            #     base_url=os.environ["LLM_BASE_URL"],
-            #     timeout=int(os.environ.get("LLM_TIMEOUT", 60)),
+            # model = OpenAIChatModel(
+            #     model_name=os.getenv("LLM_MODEL_ID"),
+            #     api_key=os.getenv("LLM_API_KEY"),
+            #     stream=False,  # 使用流式输出
+            #     client_args={
+            #         "base_url": os.getenv("LLM_BASE_URL")  # 从环境变量获取base_url
+            #     },
             # ),
-            model = OpenAIChatModel(
-                model_name=os.getenv("LLM_MODEL_ID"),
-                api_key=os.getenv("LLM_API_KEY"),
-                # organization=organization,
-                stream=False,  # 使用流式输出
-                client_args={
-                    "base_url": os.getenv("LLM_BASE_URL")  # 从环境变量获取base_url
-                },
-                # generate_kwargs={
-                #     "temperature": 0.7,
-                #     "max_tokens": 1024
-                # }
+            # formatter=OpenAIChatFormatter(),
+            model=DashScopeChatModel(
+                model_name=os.environ["DASHSCOPE_MODEL"],
+                api_key=os.environ["DASHSCOPE_API_KEY"],
+                enable_thinking=True,
             ),
-            formatter=OpenAIChatFormatter(),
+            formatter=DashScopeMultiAgentFormatter(),
         )
         
         # 角色身份确认
@@ -139,6 +134,13 @@ class ThreeKingdomsWerewolfGame:
             
         await self.moderator.announce(f"🐺 狼人请睁眼，选择今晚要击杀的目标...")
         
+        # self.werewolves[1].observe(
+            # await self.moderator.announce(
+            #     f"你是{self.werewolves[1].name}，你是狼人阵营的成员，你需要选择今晚要击杀的目标。存活玩家：{format_player_list(self.alive_players)}"
+            # )
+        # await self.werewolves[0](structured_model=DiscussionModelCN)
+        # # )
+        # raise ValueError("人工终止")
         # 狼人讨论
         async with MsgHub(
             self.werewolves,
@@ -148,9 +150,15 @@ class ThreeKingdomsWerewolfGame:
             ),
         ) as werewolves_hub:
             # 讨论阶段
-            for _ in range(MAX_DISCUSSION_ROUND):
-                for wolf in self.werewolves:
-                    await wolf(structured_model=DiscussionModelCN)
+            # for _ in range(MAX_DISCUSSION_ROUND):
+            #     for wolf in self.werewolves:
+            #         try:
+            #             await wolf(structured_model=DiscussionModelCN)
+            #         except Exception as e:
+            #             print(f"⚠️ {wolf.name} 在讨论阶段出错")
+            #             import traceback
+            #             traceback.print_exc()
+            #             raise
             
             # 投票击杀
             werewolves_hub.set_auto_broadcast(False)
@@ -204,7 +212,7 @@ class ThreeKingdomsWerewolfGame:
         # 告知预言家结果
         result_msg = f"查验结果：{target_name}是{'狼人' if target_role == '狼人' else '好人'}"
         await seer_agent.observe(await self.moderator.announce(result_msg))
-    
+     
     async def witch_phase(self, killed_player: str):
         """女巫阶段"""
         if not self.witch:
@@ -339,9 +347,9 @@ class ThreeKingdomsWerewolfGame:
                 
                 # 狼人击杀
                 killed_player = await self.werewolf_phase(round_num)
-                
+                # killed_player = ''
                 # 预言家查验
-                await self.seer_phase()
+                # await self.seer_phase()
                 
                 # 女巫行动
                 final_killed, poisoned_player = await self.witch_phase(killed_player)
