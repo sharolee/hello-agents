@@ -1,7 +1,7 @@
 """
-TerminalTool 使用示例
+TerminalTool4Windows 使用示例
 
-展示 TerminalTool 的典型使用模式：
+展示 TerminalTool4Windows 的典型使用模式：
 1. 探索式导航
 2. 数据文件分析
 3. 日志文件分析
@@ -10,7 +10,7 @@ TerminalTool 使用示例
 
 import os
 from pathlib import Path
-from hello_agents.tools import TerminalTool
+from TerminalTool4Windows import TerminalTool4Windows as TerminalTool
 
 # 获取脚本所在目录
 SCRIPT_DIR = Path(__file__).parent.absolute()
@@ -26,22 +26,22 @@ def demo_exploratory_navigation():
 
     # 第一步:查看当前目录
     print("1. 查看当前目录:")
-    result = terminal.run({"command": "ls -la"})
+    result = terminal.run({"command": "dir"})
     print(result)
 
     # 第二步:查看Python文件
     print("\n2. 查看Python文件:")
-    result = terminal.run({"command": "ls -la *.py"})
+    result = terminal.run({"command": "dir *.py"})
     print(result)
 
     # 第三步:查找特定文件
     print("\n3. 查找特定模式的文件:")
-    result = terminal.run({"command": "find . -name '*codebase_maintainer.py'"})
+    result = terminal.run({"command": "dir /s /b *codebase_maintainer.py"})
     print(result)
 
     # 第四步:查看文件内容
     print("\n4. 查看文件内容:")
-    result = terminal.run({"command": "head -n 20 codebase_maintainer.py"})
+    result = terminal.run({"command": "powershell Get-Content -Path codebase_maintainer.py -TotalCount 20"})
     print(result)
 
 
@@ -55,17 +55,17 @@ def demo_data_file_analysis():
 
     # 查看 CSV 文件的前几行
     print("1. 查看 CSV 文件前5行:")
-    result = terminal.run({"command": "head -n 5 sales_2024.csv"})
+    result = terminal.run({"command": "powershell Get-Content -Path sales_2024.csv -TotalCount 5"})
     print(result)
 
     # 统计总行数
     print("\n2. 统计文件行数:")
-    result = terminal.run({"command": "wc -l *.csv"})
+    result = terminal.run({"command": "powershell (Get-Content sales_2024.csv).Count"})
     print(result)
 
     # 提取和统计产品类别
     print("\n3. 统计产品类别分布:")
-    result = terminal.run({"command": "tail -n +2 sales_2024.csv | cut -d',' -f3 | sort | uniq -c"})
+    result = terminal.run({"command": "powershell -Command \"Get-Content sales_2024.csv | Select-Object -Skip 1 | ForEach-Object { $_.Split(',')[2] } | Group-Object | Sort-Object Count -Descending\""})
     print(result)
 
 
@@ -79,17 +79,17 @@ def demo_log_analysis():
 
     # 查看最新的错误日志
     print("1. 查看最新的错误日志:")
-    result = terminal.run({"command": "tail -n 50 app.log | grep ERROR"})
+    result = terminal.run({"command": "powershell -Command \"Get-Content -Path app.log | Select-Object -Last 50 | Where-Object { $_ -match 'ERROR' }\""})
     print(result)
 
     # 统计错误类型分布
     print("\n2. 统计错误类型分布:")
-    result = terminal.run({"command": "grep ERROR app.log | awk '{print $4}' | sort | uniq -c | sort -rn"})
+    result = terminal.run({"command": "powershell -Command \"Get-Content -Path app.log | Where-Object { $_ -match 'ERROR' } | ForEach-Object { ($_ -split ' ')[3] } | Group-Object | Sort-Object Count -Descending\""})
     print(result)
 
     # 查找特定时间段的日志
     print("\n3. 查找特定时间段的日志:")
-    result = terminal.run({"command": "grep '2024-01-19 15:' app.log | tail -n 20"})
+    result = terminal.run({"command": "powershell -Command \"Get-Content -Path app.log | Where-Object { $_ -match '2024-01-19 15:' } | Select-Object -Last 20\""})
     print(result)
 
 
@@ -103,17 +103,17 @@ def demo_codebase_analysis():
 
     # 统计代码行数
     print("1. 统计代码行数:")
-    result = terminal.run({"command": "find . -name '*.py' -exec wc -l {} + | tail -n 1"})
+    result = terminal.run({"command": "powershell -Command \"(Get-ChildItem -Recurse -Filter '*.py' | Get-Content | Measure-Object -Line).Lines\""})
     print(result)
 
     # 查找所有 TODO 注释
     print("\n2. 查找所有 TODO 注释:")
-    result = terminal.run({"command": "grep -rn 'TODO' --include='*.py'"})
+    result = terminal.run({"command": "powershell -Command \"Get-ChildItem -Recurse -Filter '*.py' | Select-String -Pattern 'TODO'\""})
     print(result)
 
     # 查找特定函数的定义
     print("\n3. 查找特定函数的定义:")
-    result = terminal.run({"command": "grep -rn 'def process_data' --include='*.py'"})
+    result = terminal.run({"command": "powershell -Command \"Get-ChildItem -Recurse -Filter '*.py' | Select-String -Pattern 'def process_data'\""})
     print(result)
 
 
@@ -126,24 +126,24 @@ def demo_security_features():
     terminal = TerminalTool(workspace=str(SCRIPT_DIR / "project"))
 
     # 尝试执行不允许的命令
-    print("1. 尝试执行危险命令 (rm):")
-    result = terminal.run({"command": "rm -rf /"})
+    print("1. 尝试执行危险命令 (del):")
+    result = terminal.run({"command": "del /f /s /q *.*"})
     print(result)
 
     # 尝试访问工作目录外的文件
     print("\n2. 尝试访问工作目录外的文件:")
-    result = terminal.run({"command": "cat /etc/passwd"})
+    result = terminal.run({"command": "type C:\\Windows\\System32\\drivers\\etc\\hosts"})
     print(result)
 
     # 尝试逃逸工作目录
     print("\n3. 尝试通过 .. 逃逸工作目录:")
-    result = terminal.run({"command": "cd ../../../etc"})
+    result = terminal.run({"command": "cd ..\\..\\..\\Windows"})
     print(result)
 
 
 def main():
     print("=" * 80)
-    print("TerminalTool 使用示例")
+    print("TerminalTool4Windows 使用示例")
     print("=" * 80)
 
     # 演示各种使用场景
