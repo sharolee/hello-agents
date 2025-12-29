@@ -4,6 +4,8 @@
 代码示例 07: RAGTool智能问答系统
 展示完整的检索→上下文构建→答案生成流程
 """
+from dotenv import load_dotenv
+load_dotenv(override=True)
 
 import time
 from hello_agents.tools import RAGTool

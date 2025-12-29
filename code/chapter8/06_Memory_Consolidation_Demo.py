@@ -4,6 +4,8 @@
 代码示例 06: 记忆整合机制演示
 展示从短期记忆到长期记忆的智能转化过程
 """
+from dotenv import load_dotenv
+load_dotenv(override=True)
 
 import time
 from datetime import datetime, timedelta

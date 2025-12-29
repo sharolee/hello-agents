@@ -4,7 +4,10 @@
 代码示例 03: WorkingMemory实现详解
 展示工作记忆的混合检索策略和TTL机制
 """
+from dotenv import load_dotenv
 
+# 加载环境变量
+load_dotenv(override=True)
 import time
 from datetime import datetime, timedelta
 from typing import List, Dict, Any

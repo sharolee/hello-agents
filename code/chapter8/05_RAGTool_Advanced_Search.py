@@ -4,7 +4,10 @@
 代码示例 05: RAGTool高级检索策略
 展示MQE、HyDE等先进检索技术的实现和应用
 """
+from dotenv import load_dotenv
 
+# 加载环境变量
+load_dotenv(override=True)
 import time
 from hello_agents.tools import RAGTool
 

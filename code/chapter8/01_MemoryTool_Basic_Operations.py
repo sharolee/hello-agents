@@ -4,6 +4,10 @@
 代码示例 01: MemoryTool基础操作
 展示MemoryTool的核心execute方法和基本操作
 """
+from dotenv import load_dotenv
+
+# 加载环境变量
+load_dotenv(override=True)
 
 from datetime import datetime
 from typing import List

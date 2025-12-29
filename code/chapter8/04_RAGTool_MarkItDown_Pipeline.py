@@ -4,7 +4,10 @@
 代码示例 04: RAGTool的MarkItDown处理管道
 展示Any格式→Markdown→分块→向量化的完整流程
 """
+from dotenv import load_dotenv
 
+# 加载环境变量
+load_dotenv(override=True)
 import os
 import time
 import tempfile

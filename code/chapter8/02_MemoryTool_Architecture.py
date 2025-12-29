@@ -4,7 +4,10 @@
 代码示例 02: MemoryTool架构设计
 展示MemoryTool和MemoryManager的分层架构
 """
+from dotenv import load_dotenv
 
+# 加载环境变量
+load_dotenv(override=True)
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 from hello_agents.tools import MemoryTool
