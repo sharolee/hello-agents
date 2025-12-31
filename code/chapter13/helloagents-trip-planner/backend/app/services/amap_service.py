@@ -28,10 +28,12 @@ def get_amap_mcp_tool() -> MCPTool:
         _amap_mcp_tool = MCPTool(
             name="amap",
             description="高德地图服务,支持POI搜索、路线规划、天气查询等功能",
-            server_command=["uvx", "amap-mcp-server"],
+            # server_command=["uvx", "amap-mcp-server"],
+            server_command=["npx", "-y", "@amap/amap-maps-mcp-server"],
             env={"AMAP_MAPS_API_KEY": settings.amap_api_key},
             auto_expand=True  # 自动展开为独立工具
         )
+        
         
         print(f"✅ 高德地图MCP工具初始化成功")
         print(f"   工具数量: {len(_amap_mcp_tool._available_tools)}")

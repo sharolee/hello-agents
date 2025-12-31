@@ -94,6 +94,8 @@ if __name__ == "__main__":
         "app.api.main:app",
         host=settings.host,
         port=settings.port,
-        reload=True
+        reload=True,
+        timeout_keep_alive=600,  # 10分钟超时
+        timeout_graceful_shutdown=600
     )
 

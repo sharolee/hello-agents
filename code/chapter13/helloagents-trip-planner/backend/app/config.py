@@ -97,7 +97,7 @@ def print_config():
     print(f"应用名称: {settings.app_name}")
     print(f"版本: {settings.app_version}")
     print(f"服务器: {settings.host}:{settings.port}")
-    print(f"高德地图API Key: {'已配置' if settings.amap_api_key else '未配置'}")
+    print(f"高德地图API Key: { '已配置' if settings.amap_api_key else '未配置' }")
 
     # 检查LLM配置
     llm_api_key = os.getenv("LLM_API_KEY") or os.getenv("OPENAI_API_KEY")

@@ -32,8 +32,8 @@ def demo():
     """演示"""
     assistant = create_weather_assistant()
 
-    print("\n查询北京天气：")
-    response = assistant.run("北京今天天气怎么样？")
+    print("\n查询广州天气：")
+    response = assistant.run("广州今天天气怎么样？")
     print(f"回答: {response}\n")
 
 

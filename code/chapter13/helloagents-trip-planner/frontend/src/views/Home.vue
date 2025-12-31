@@ -256,20 +256,22 @@ const handleSubmit = async () => {
   // 模拟进度更新
   const progressInterval = setInterval(() => {
     if (loadingProgress.value < 90) {
-      loadingProgress.value += 10
-
+      loadingProgress.value += 5
+      
       // 更新状态文本
-      if (loadingProgress.value <= 30) {
-        loadingStatus.value = '🔍 正在搜索景点...'
-      } else if (loadingProgress.value <= 50) {
-        loadingStatus.value = '🌤️ 正在查询天气...'
-      } else if (loadingProgress.value <= 70) {
-        loadingStatus.value = '🏨 正在推荐酒店...'
+      if (loadingProgress.value <= 20) {
+        loadingStatus.value = '🔍 正在初始化智能规划系统...'
+      } else if (loadingProgress.value <= 40) {
+        loadingStatus.value = '📍 正在分析目的地信息...'
+      } else if (loadingProgress.value <= 60) {
+        loadingStatus.value = '🌤️  正在查询天气和交通数据...'
+      } else if (loadingProgress.value <= 80) {
+        loadingStatus.value = '🏨 正在搜索合适的酒店和景点...'
       } else {
-        loadingStatus.value = '📋 正在生成行程计划...'
+        loadingStatus.value = '📋 正在智能生成个性化行程...'
       }
     }
-  }, 500)
+  }, 1000)
 
   try {
     const requestData: TripFormData = {
@@ -283,27 +285,30 @@ const handleSubmit = async () => {
       free_text_input: formData.free_text_input
     }
 
+    console.log('发送旅行规划请求:', requestData)
     const response = await generateTripPlan(requestData)
+    console.log('收到旅行规划响应:', response)
 
     clearInterval(progressInterval)
     loadingProgress.value = 100
-    loadingStatus.value = '✅ 完成!'
+    loadingStatus.value = '✅ 旅行计划生成成功!'
 
     if (response.success && response.data) {
       // 保存到sessionStorage
       sessionStorage.setItem('tripPlan', JSON.stringify(response.data))
 
-      message.success('旅行计划生成成功!')
+      message.success('旅行计划生成成功!正在跳转...')
 
       // 短暂延迟后跳转
       setTimeout(() => {
         router.push('/result')
-      }, 500)
+      }, 1000)
     } else {
       message.error(response.message || '生成失败')
     }
   } catch (error: any) {
     clearInterval(progressInterval)
+    console.error('生成旅行计划失败:', error)
     message.error(error.message || '生成旅行计划失败,请稍后重试')
   } finally {
     setTimeout(() => {

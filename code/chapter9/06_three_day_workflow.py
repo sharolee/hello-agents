@@ -10,6 +10,10 @@ CodebaseMaintainer 三天工作流演示
 """
 
 import os
+from dotenv import load_dotenv
+
+# 加载环境变量
+load_dotenv()
 # 配置嵌入模型（三选一）
 # 方案一：TF-IDF（最简单，无需额外依赖）
 os.environ['EMBED_MODEL_TYPE'] = 'tfidf'
@@ -157,7 +161,7 @@ def demonstrate_cross_session_continuity():
     maintainer_1 = CodebaseMaintainer(
         project_name="demo_codebase",
         #实际使用的时候替换代码路径
-        codebase_path="/Users/suntao/Documents/GitHub/hello-agents/code/chapter9/codebase",
+        codebase_path="codebase",
         llm=HelloAgentsLLM()
     )
 
@@ -180,7 +184,7 @@ def demonstrate_cross_session_continuity():
     maintainer_2 = CodebaseMaintainer(
         project_name="demo_codebase",  # 同一个项目
         #实际使用的时候替换代码路径
-        codebase_path="/Users/suntao/Documents/GitHub/hello-agents/code/chapter9/codebase",
+        codebase_path="codebase",
         llm=HelloAgentsLLM()
     )
 
@@ -214,8 +218,13 @@ def demonstrate_tool_synergy():
     maintainer = CodebaseMaintainer(
         project_name="synergy_demo",
         #实际使用的时候替换代码路径
-        codebase_path="/Users/suntao/Documents/GitHub/hello-agents/code/chapter9/codebase",
-        llm=HelloAgentsLLM()
+        codebase_path="codebase",
+        llm=HelloAgentsLLM(
+            provider=os.getenv("LLM_PROVIDER"),
+            model=os.getenv("LLM_MODEL"),
+            api_key=os.getenv("LLM_API_KEY"),
+            base_url=os.getenv("LLM_BASE_URL")
+        )
     )
 
     # Agent 自主分析并记录
@@ -262,8 +271,9 @@ def main():
     maintainer = CodebaseMaintainer(
         project_name="demo_codebase",
         #实际使用的时候替换代码路径
-        codebase_path="/Users/suntao/Documents/GitHub/hello-agents/code/chapter9/codebase",
-        llm=HelloAgentsLLM(provider="deepseek",model="deepseek-chat",api_key="sk-1264257bc4114a73998498ad1436f8f0",base_url="https://api.deepseek.com")
+        codebase_path="codebase",
+        # llm=HelloAgentsLLM(provider="deepseek",model="deepseek-chat",api_key="sk-1264257bc4114a73998498ad1436f8f0",base_url="https://api.deepseek.com")
+        llm=HelloAgentsLLM()
     )
 
     # 执行三天工作流

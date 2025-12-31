@@ -168,7 +168,8 @@ class MultiAgentTripPlanner:
             self.amap_tool = MCPTool(
                 name="amap",
                 description="高德地图服务",
-                server_command=["uvx", "amap-mcp-server"],
+                # server_command=["uvx", "amap-mcp-server"],
+                server_command=["npx", "-y", "@amap/amap-maps-mcp-server"],
                 env={"AMAP_MAPS_API_KEY": settings.amap_api_key},
                 auto_expand=True
             )
@@ -236,6 +237,7 @@ class MultiAgentTripPlanner:
             print(f"日期: {request.start_date} 至 {request.end_date}")
             print(f"天数: {request.travel_days}天")
             print(f"偏好: {', '.join(request.preferences) if request.preferences else '无'}")
+            print(f"额外要求: {', '.join(request.free_text_input) if request.free_text_input else '无'}")
             print(f"{'='*60}\n")
 
             # 步骤1: 景点搜索Agent搜索景点
@@ -256,13 +258,13 @@ class MultiAgentTripPlanner:
             hotel_response = self.hotel_agent.run(hotel_query)
             print(f"酒店搜索结果: {hotel_response[:200]}...\n")
 
-            # 步骤4: 行程规划Agent整合信息生成计划
+            # # 步骤4: 行程规划Agent整合信息生成计划
             print("📋 步骤4: 生成行程计划...")
             planner_query = self._build_planner_query(request, attraction_response, weather_response, hotel_response)
             planner_response = self.planner_agent.run(planner_query)
             print(f"行程规划结果: {planner_response[:300]}...\n")
 
-            # 解析最终计划
+            # # 解析最终计划
             trip_plan = self._parse_response(planner_response, request)
 
             print(f"{'='*60}")
@@ -270,6 +272,7 @@ class MultiAgentTripPlanner:
             print(f"{'='*60}\n")
 
             return trip_plan
+            # return weather_response
 
         except Exception as e:
             print(f"❌ 生成旅行计划失败: {str(e)}")

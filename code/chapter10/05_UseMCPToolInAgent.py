@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+load_dotenv(override=True)
+
 from hello_agents import SimpleAgent, HelloAgentsLLM
 from hello_agents.tools import MCPTool
 

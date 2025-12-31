@@ -1,14 +1,20 @@
 """旅行规划API路由"""
 
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import JSONResponse
 from ...models.schemas import (
     TripRequest,
     TripPlanResponse,
     ErrorResponse
 )
 from ...agents.trip_planner_agent import get_trip_planner_agent
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 
 router = APIRouter(prefix="/trip", tags=["旅行规划"])
+
+# 创建线程池用于处理CPU密集型任务
+executor = ThreadPoolExecutor(max_workers=4)
 
 
 @router.post(
@@ -39,9 +45,12 @@ async def plan_trip(request: TripRequest):
         print("🔄 获取多智能体系统实例...")
         agent = get_trip_planner_agent()
 
-        # 生成旅行计划
+        # 使用线程池异步执行CPU密集型任务
         print("🚀 开始生成旅行计划...")
-        trip_plan = agent.plan_trip(request)
+        loop = asyncio.get_event_loop()
+        trip_plan = await loop.run_in_executor(
+            executor, agent.plan_trip, request
+        )
 
         print("✅ 旅行计划生成成功,准备返回响应\n")
 
