@@ -1,4 +1,6 @@
 """赛博小镇 FastAPI 后端主程序"""
+from dotenv import load_dotenv
+load_dotenv(override=True)
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -119,6 +121,7 @@ async def chat_with_npc(request: ChatRequest):
     try:
         # 调用NPC Agent处理对话
         response_text = npc_mgr.chat(request.npc_name, request.message)
+        print(f"[对话] {request.npc_name}: {request.message}: {response_text}")
         
         return ChatResponse(
             npc_name=request.npc_name,

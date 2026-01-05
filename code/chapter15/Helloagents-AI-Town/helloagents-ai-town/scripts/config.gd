@@ -2,7 +2,7 @@
 extends Node
 
 # ==================== API配置 ====================
-const API_BASE_URL = "http://localhost:8000"
+const API_BASE_URL = "http://localhost:8008"
 const API_CHAT = API_BASE_URL + "/chat"
 const API_NPCS = API_BASE_URL + "/npcs"
 const API_NPC_STATUS = API_BASE_URL + "/npcs/status"

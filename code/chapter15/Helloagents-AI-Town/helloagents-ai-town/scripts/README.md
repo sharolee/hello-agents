@@ -21,7 +21,7 @@ scripts/
 
 **关键配置**:
 ```gdscript
-const API_BASE_URL = "http://localhost:8000"  # 后端API地址
+const API_BASE_URL = "http://localhost:8008"  # 后端API地址
 const PLAYER_SPEED = 200.0                     # 玩家速度
 const NPC_STATUS_UPDATE_INTERVAL = 30.0        # NPC更新间隔
 ```
